@@ -29,14 +29,69 @@
             height: auto;
             border: 2px solid #333;
         }
+        #audioOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+        #audioOverlay.hidden {
+            display: none;
+        }
+        #enableAudioBtn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #enableAudioBtn:hover {
+            background: #45a049;
+        }
     </style>
 </head>
 <body>
+    <div id="audioOverlay">
+        <div style="text-align: center;">
+            <h2>Enable Audio</h2>
+            <p>Click the button below to enable audio playback</p>
+            <button id="enableAudioBtn" onclick="enableAudio()">Enable Audio</button>
+        </div>
+    </div>
+    
     <h1>Guns Out Buns Out</h1>
     <div id="status">Ready...</div>
     <img src="{{ url_for('video_feed') }}" alt="Camera Feed">
     
+    <audio id="audioPlayer" src="{{ url_for('static', filename='1108.MP3') }}" preload="auto"></audio>
+    
     <script>
+        let wasPrimed = false;
+        let audioEnabled = false;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioOverlay = document.getElementById('audioOverlay');
+        
+        function enableAudio() {
+            // Try to play and immediately pause to enable audio context
+            audioPlayer.play().then(() => {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                audioEnabled = true;
+                audioOverlay.classList.add('hidden');
+            }).catch(error => {
+                console.error('Error enabling audio:', error);
+                alert('Could not enable audio. Please check your browser settings.');
+            });
+        }
 
         function updateStatus() {
             fetch('/status')
@@ -44,15 +99,23 @@
                 .then(data => {
                     const statusDiv = document.getElementById('status');
                     if (data.guns_out && data.fired_hand) {
-                        const handName = data.fired_hand === 'left' ? 'Left' : 'Right';
+                        const handName = data.fired_hand === 'one' ? 'Player 1\'s' : 'Player 2\'s';
                         statusDiv.textContent = `${handName} Hand Fired First!`;
                         statusDiv.className = 'guns-out';
                     } else if (data.primed) {
                         statusDiv.textContent = 'Primed...';
                         statusDiv.className = 'primed';
+                        
+                        // Play audio when primed becomes true (transition from false to true)
+                        if (!wasPrimed && audioEnabled) {
+                            audioPlayer.currentTime = 0; // Reset to start
+                            audioPlayer.play().catch(error => console.error('Error playing audio:', error));
+                        }
+                        wasPrimed = true;
                     } else {
                         statusDiv.textContent = 'Ready...';
                         statusDiv.className = '';
+                        wasPrimed = false;
                     }
                 })
                 .catch(error => console.error('Error:', error));

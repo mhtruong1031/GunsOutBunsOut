@@ -22,8 +22,8 @@ def video_feed():
 
 @app.route('/status')
 def status():
-    fired_hand, primed = camera.get_firing_status()
-    print(fired_hand, primed)
+    fired_hand, primed, playing = camera.get_firing_status()
+    print(fired_hand, primed, playing)
     return jsonify({
         'guns_out': fired_hand is not None,
         'fired_hand': fired_hand,
