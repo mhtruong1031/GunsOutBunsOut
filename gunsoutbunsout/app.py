@@ -12,7 +12,7 @@ def gen(cam):
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route('/play')
-def index():
+def play():
     return render_template('play.html')
 
 @app.route('/video_feed')
