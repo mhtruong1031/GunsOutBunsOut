@@ -39,6 +39,8 @@ class Camera:
                 if len(hands) == 2:
                     hand1, hand2 = hands[0], hands[1]
 
+                    
+
                     self.primed = hand1.landmark[2].y < hand1.landmark[8].y and hand2.landmark[2].y < hand2.landmark[8].y
 
                     if not self.playing:
@@ -57,9 +59,9 @@ class Camera:
                             hand1_firing = hands[1].landmark[8].y <= hands[1].landmark[2].y
                             
                             if hand0_firing:
-                                self.firing_hand = 'two'
-                            elif hand1_firing:  
                                 self.firing_hand = 'one'
+                            elif hand1_firing:  
+                                self.firing_hand = 'two'
 
                             self.playing = False
                 else: 
@@ -67,6 +69,28 @@ class Camera:
 
                 for hand in hands:
                     self.drawer.draw_landmarks(frame, hand, mp.solutions.hands.HAND_CONNECTIONS)
+                
+                # Draw "1" above hand1 (first hand)
+                if len(hands) > 0:
+                    h, w, _ = frame.shape
+                    
+                    for i, hand in enumerate(hands):
+                        wrist = hand.landmark[4]
+                    
+                        x = int(wrist.x * w)
+                        y = int(wrist.y * h)
+                    
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        font_scale = 2
+                        thickness = 3
+                        color = (255, 255, 255)  
+                        
+                        (text_width, text_height), baseline = cv2.getTextSize("1", font, font_scale, thickness)
+                        
+                        text_x = x - text_width // 2
+                        text_y = y - 50
+                        # Draw the "1"
+                        cv2.putText(frame, str(i+1), (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
 
             else:
                 self.primed = False
@@ -85,7 +109,6 @@ class Camera:
     
     def reset(self):
         self.primed = False
-        self.firing_hand = None
         self.firing_hand = None
         self.playing = False
 
