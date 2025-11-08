@@ -37,14 +37,19 @@
     <img src="{{ url_for('video_feed') }}" alt="Camera Feed">
     
     <script>
+
         function updateStatus() {
             fetch('/status')
                 .then(response => response.json())
                 .then(data => {
                     const statusDiv = document.getElementById('status');
-                    if (data.guns_out) {
-                        statusDiv.textContent = 'Guns Out!';
+                    if (data.guns_out && data.fired_hand) {
+                        const handName = data.fired_hand === 'left' ? 'Left' : 'Right';
+                        statusDiv.textContent = `${handName} Hand Fired First!`;
                         statusDiv.className = 'guns-out';
+                    } else if (data.primed) {
+                        statusDiv.textContent = 'Primed...';
+                        statusDiv.className = 'primed';
                     } else {
                         statusDiv.textContent = 'Ready...';
                         statusDiv.className = '';

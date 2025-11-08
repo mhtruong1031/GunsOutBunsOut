@@ -13,7 +13,7 @@ def gen(cam):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('play.html')
 
 @app.route('/video_feed')
 def video_feed():
@@ -22,7 +22,13 @@ def video_feed():
 
 @app.route('/status')
 def status():
-    return jsonify({'guns_out': camera.guns_out})
+    fired_hand, primed = camera.get_firing_status()
+    print(fired_hand, primed)
+    return jsonify({
+        'guns_out': fired_hand is not None,
+        'fired_hand': fired_hand,
+        'primed': primed
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
