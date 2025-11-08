@@ -73,18 +73,28 @@
     <img src="{{ url_for('video_feed') }}" alt="Camera Feed">
     
     <audio id="audioPlayer" src="{{ url_for('static', filename='1108.MP3') }}" preload="auto"></audio>
+    <audio id="boomPlayer" src="{{ url_for('static', filename='boom.mp3') }}" preload="auto"></audio>
     
     <script>
         let wasPrimed = false;
+        let wasFired = false;
         let audioEnabled = false;
         const audioPlayer = document.getElementById('audioPlayer');
+        const boomPlayer = document.getElementById('boomPlayer');
         const audioOverlay = document.getElementById('audioOverlay');
         
         function enableAudio() {
             // Try to play and immediately pause to enable audio context
-            audioPlayer.play().then(() => {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
+            Promise.all([
+                audioPlayer.play().then(() => {
+                    audioPlayer.pause();
+                    audioPlayer.currentTime = 0;
+                }),
+                boomPlayer.play().then(() => {
+                    boomPlayer.pause();
+                    boomPlayer.currentTime = 0;
+                })
+            ]).then(() => {
                 audioEnabled = true;
                 audioOverlay.classList.add('hidden');
             }).catch(error => {
@@ -102,6 +112,13 @@
                         const handName = data.fired_hand === 'one' ? 'Player 1\'s' : 'Player 2\'s';
                         statusDiv.textContent = `${handName} Hand Fired First!`;
                         statusDiv.className = 'guns-out';
+                        
+                        // Play boom sound when fired becomes true (transition from false to true)
+                        if (!wasFired && audioEnabled) {
+                            boomPlayer.currentTime = 0; // Reset to start
+                            boomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
+                        }
+                        wasFired = true;
                     } else if (data.primed) {
                         statusDiv.textContent = 'Primed...';
                         statusDiv.className = 'primed';
@@ -112,10 +129,12 @@
                             audioPlayer.play().catch(error => console.error('Error playing audio:', error));
                         }
                         wasPrimed = true;
+                        wasFired = false; // Reset fired state when not in fired state
                     } else {
                         statusDiv.textContent = 'Ready...';
                         statusDiv.className = '';
                         wasPrimed = false;
+                        wasFired = false; // Reset fired state when ready
                     }
                 })
                 .catch(error => console.error('Error:', error));
