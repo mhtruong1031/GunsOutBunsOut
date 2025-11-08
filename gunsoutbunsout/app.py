@@ -11,6 +11,10 @@ def gen(cam):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 @app.route('/play')
 def play():
     return render_template('play.html')
