@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guns Out Buns Out</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #status {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #333;
+        }
+        #status.guns-out {
+            color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Guns Out Buns Out</h1>
+    <div id="status">Ready...</div>
+    <img src="{{ url_for('video_feed') }}" alt="Camera Feed">
+    
+    <script>
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById('status');
+                    if (data.guns_out) {
+                        statusDiv.textContent = 'Guns Out!';
+                        statusDiv.className = 'guns-out';
+                    } else {
+                        statusDiv.textContent = 'Ready...';
+                        statusDiv.className = '';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        // Poll for status updates every 100ms
+        setInterval(updateStatus, 100);
+        updateStatus(); // Initial update
+    </script>
+</body>
+</html>
