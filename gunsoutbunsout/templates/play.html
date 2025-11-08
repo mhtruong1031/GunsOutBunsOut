@@ -3,18 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inria+Sans:wght@400;700&display=swap" rel="stylesheet">
     <title>Guns Out Buns Out</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inria Sans';
+        }
+        #videoContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        #videoFeed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
         #status {
-            font-size: 48px;
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 64px;
             font-weight: bold;
-            margin: 20px 0;
-            color: #333;
+            color: #ffffff;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            pointer-events: none;
         }
         #status.guns-out {
             color: #ff0000;
@@ -23,11 +50,6 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #333;
         }
         #audioOverlay {
             position: fixed;
@@ -68,9 +90,11 @@
         </div>
     </div>
     
-    <h1>Guns Out Buns Out</h1>
+    <div id="videoContainer">
+        <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Camera Feed">
+    </div>
+    
     <div id="status">Ready...</div>
-    <img src="{{ url_for('video_feed') }}" alt="Camera Feed">
     
     <audio id="audioPlayer" src="{{ url_for('static', filename='1108.MP3') }}" preload="auto"></audio>
     <audio id="boomPlayer" src="{{ url_for('static', filename='boom.mp3') }}" preload="auto"></audio>
