@@ -29,6 +29,7 @@ class Camera:
         self.primed = False
         self.primed_start_time = None
         self.winning_side = None
+        self.fired = False
         
         # HP tracking
         self.left_hp = 3
@@ -36,7 +37,7 @@ class Camera:
         
         # Bullet system
         self.bullets = []
-        self.bullet_speed = 15  # pixels per frame
+        self.bullet_speed = 30  # pixels per frame
         self.prev_firing_states = {}  # Track previous firing states to detect transitions
         
         # MediaPipe setup
@@ -64,6 +65,8 @@ class Camera:
             
             # Draw center line
             cv2.line(frame, (center_x, 0), (center_x, h), (255, 255, 255), 2)
+
+            self.fired = False
             
             # Reset game if no hands detected
             if not results.multi_hand_landmarks:
@@ -100,8 +103,21 @@ class Camera:
                                     self._reset_game()
                                     self._start_game()
                             else:
-                                if time.time() - self.primed_start_time >= 3.0:
+                                elapsed = time.time() - self.primed_start_time
+                                if elapsed >= 3.0:
                                     self._start_game()
+                                else:
+                                    font = cv2.FONT_HERSHEY_SIMPLEX
+                                    font_scale = 3
+                                    color = (255, 255, 255) 
+                                    thickness = 8
+                                    position = (center_x, 175)
+                                    if elapsed >= 2.0:
+                                        cv2.putText(frame, '1', position, font, font_scale, color, thickness, cv2.LINE_AA)
+                                    elif elapsed >= 1.0:
+                                        cv2.putText(frame, '2', position, font, font_scale, color, thickness, cv2.LINE_AA)
+                                    else:
+                                        cv2.putText(frame, '3', position, font, font_scale, color, thickness, cv2.LINE_AA)
                     else:
                         self.primed_start_time = None
                     
@@ -168,6 +184,7 @@ class Camera:
                                         bullet_dx,
                                         0 
                                     )
+                                    self.fired = True
                                     self.bullets.append({
                                         'bullet': bullet,
                                         'owner_side': info['side']
@@ -311,7 +328,7 @@ class Camera:
             'left_hp': self.left_hp,
             'right_hp': self.right_hp,
             'winning_side': self.winning_side
-        }
+        }, self.fired
     
     def stop(self):
         self.running = False

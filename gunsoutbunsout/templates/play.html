@@ -119,6 +119,7 @@
     
     <audio id="audioPlayer" src="{{ url_for('static', filename='1108.MP3') }}" preload="auto"></audio>
     <audio id="boomPlayer" src="{{ url_for('static', filename='boom.MP3') }}" preload="auto"></audio>
+    <audio id="baboomPlayer" src="{{ url_for('static', filename='baboom.MP3') }}" preload="auto"></audio>
     
     <script>
         let wasPrimed = false;
@@ -127,6 +128,7 @@
         let audioEnabled = false;
         const audioPlayer = document.getElementById('audioPlayer');
         const boomPlayer = document.getElementById('boomPlayer');
+        const baboomPlayer = document.getElementById('baboomPlayer');
         const audioOverlay = document.getElementById('audioOverlay');
         
         function enableAudio() {
@@ -161,13 +163,17 @@
                         hpDisplay.classList.add('visible');
                         
                         // Play sound when HP decreases
-                        if (data.left_hp < lastLeftHP && audioEnabled) {
+                        if (data.fired) {
                             boomPlayer.currentTime = 0;
-                            boomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
+                            boomPlayer.play().catch(error => console.error('Error playing audio:', error));
                         }
-                        if (data.right_hp < lastRightHP && audioEnabled) {
-                            boomPlayer.currentTime = 0;
-                            boomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
+                        if (data.left_hp == 1 && audioEnabled) {
+                            baboomPlayer.currentTime = 0;
+                            baboomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
+                        }
+                        if (data.right_hp == 1 && audioEnabled) {
+                            baboomPlayer.currentTime = 0;
+                            baboomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
                         }
                         
                         lastLeftHP = data.left_hp;
@@ -192,7 +198,7 @@
                         
                         // Play audio when primed becomes true (transition from false to true)
                         if (!wasPrimed && audioEnabled) {
-                            audioPlayer.currentTime = 0; // Reset to start
+                            audioPlayer.currentTime = 0; 
                             audioPlayer.play().catch(error => console.error('Error playing audio:', error));
                         }
                         wasPrimed = true;
@@ -206,7 +212,7 @@
         }
         
         // Poll for status updates every 100ms
-        setInterval(updateStatus, 100);
+        setInterval(updateStatus, 50);
         updateStatus(); // Initial update
     </script>
 </body>
