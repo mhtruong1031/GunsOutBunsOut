@@ -43,13 +43,33 @@
             z-index: 100;
             pointer-events: none;
         }
-        #status.guns-out {
+        #status.primed {
+            color: #ffff00;
+            animation: pulse 1s infinite;
+        }
+        #status.game-over {
             color: #ff0000;
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
+        }
+        #hp-display {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+        #hp-display.visible {
+            display: block;
         }
         #audioOverlay {
             position: fixed;
@@ -95,20 +115,21 @@
     </div>
     
     <div id="status">Ready...</div>
+    <div id="hp-display">Left: 3 HP | Right: 3 HP</div>
     
     <audio id="audioPlayer" src="{{ url_for('static', filename='1108.MP3') }}" preload="auto"></audio>
-    <audio id="boomPlayer" src="{{ url_for('static', filename='boom.mp3') }}" preload="auto"></audio>
+    <audio id="boomPlayer" src="{{ url_for('static', filename='boom.MP3') }}" preload="auto"></audio>
     
     <script>
         let wasPrimed = false;
-        let wasFired = false;
+        let lastLeftHP = 3;
+        let lastRightHP = 3;
         let audioEnabled = false;
         const audioPlayer = document.getElementById('audioPlayer');
         const boomPlayer = document.getElementById('boomPlayer');
         const audioOverlay = document.getElementById('audioOverlay');
         
         function enableAudio() {
-            // Try to play and immediately pause to enable audio context
             Promise.all([
                 audioPlayer.play().then(() => {
                     audioPlayer.pause();
@@ -132,17 +153,39 @@
                 .then(response => response.json())
                 .then(data => {
                     const statusDiv = document.getElementById('status');
-                    if (data.guns_out && data.fired_hand) {
-                        const handName = data.fired_hand === 'one' ? 'Player 1\'s' : 'Player 2\'s';
-                        statusDiv.textContent = `${handName} Hand Fired First!`;
-                        statusDiv.className = 'guns-out';
+                    const hpDisplay = document.getElementById('hp-display');
+                    
+                    // Update HP display
+                    if (data.playing || data.game_over) {
+                        hpDisplay.textContent = `Left: ${data.left_hp}/3 HP | Right: ${data.right_hp}/3 HP`;
+                        hpDisplay.classList.add('visible');
                         
-                        // Play boom sound when fired becomes true (transition from false to true)
-                        if (!wasFired && audioEnabled) {
-                            boomPlayer.currentTime = 0; // Reset to start
+                        // Play sound when HP decreases
+                        if (data.left_hp < lastLeftHP && audioEnabled) {
+                            boomPlayer.currentTime = 0;
                             boomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
                         }
-                        wasFired = true;
+                        if (data.right_hp < lastRightHP && audioEnabled) {
+                            boomPlayer.currentTime = 0;
+                            boomPlayer.play().catch(error => console.error('Error playing boom audio:', error));
+                        }
+                        
+                        lastLeftHP = data.left_hp;
+                        lastRightHP = data.right_hp;
+                    } else {
+                        hpDisplay.classList.remove('visible');
+                        lastLeftHP = 3;
+                        lastRightHP = 3;
+                    }
+                    
+                    // Update status message
+                    if (data.game_over) {
+                        const winner = data.winning_side === 'left' ? 'Left' : 'Right';
+                        statusDiv.textContent = `${winner} Player Wins!`;
+                        statusDiv.className = 'game-over';
+                    } else if (data.playing) {
+                        statusDiv.textContent = 'Fight!';
+                        statusDiv.className = '';
                     } else if (data.primed) {
                         statusDiv.textContent = 'Primed...';
                         statusDiv.className = 'primed';
@@ -153,12 +196,10 @@
                             audioPlayer.play().catch(error => console.error('Error playing audio:', error));
                         }
                         wasPrimed = true;
-                        wasFired = false; // Reset fired state when not in fired state
                     } else {
                         statusDiv.textContent = 'Ready...';
                         statusDiv.className = '';
                         wasPrimed = false;
-                        wasFired = false; // Reset fired state when ready
                     }
                 })
                 .catch(error => console.error('Error:', error));
